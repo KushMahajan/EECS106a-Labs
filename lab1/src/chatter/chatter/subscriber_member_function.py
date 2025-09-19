@@ -14,36 +14,36 @@
 
 import rclpy
 from rclpy.node import Node
+from my_chatter_msgs.msg import TimestampString
 
-from std_msgs.msg import String
 
-
-class MinimalSubscriber(Node):
+class UserInputSubscriber(Node):
 
     def __init__(self):
-        super().__init__('minimal_subscriber')
+        super().__init__('user_input_subscriber')
         self.subscription = self.create_subscription(
-            String,
-            'chatter_talk',
+            TimestampString,
+            '/user_messages',
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg.data)
+        recv_time = self.get_clock().now().nanoseconds
+        self.get_logger().info('Message: "%s", Sent at: "%s", Received at: "%s"' % (msg.data, msg.timestamp, recv_time))
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_subscriber = MinimalSubscriber()
+    user_input_subscriber = UserInputSubscriber()
 
-    rclpy.spin(minimal_subscriber)
+    rclpy.spin(user_input_subscriber)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    minimal_subscriber.destroy_node()
+    user_input_subscriber.destroy_node()
     rclpy.shutdown()
 
 

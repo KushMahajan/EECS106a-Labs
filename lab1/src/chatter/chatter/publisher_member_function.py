@@ -18,6 +18,7 @@ from rclpy.node import Node
 
 # This line imports the built-in string message type that our node will use to structure its data to pass on our topic
 from std_msgs.msg import String
+from my_chatter_msgs.msg import TimestampString
 
 # We're creating a class called Talker, which is a subclass of Node
 class MinimalPublisher(Node):
