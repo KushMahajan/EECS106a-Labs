@@ -1,65 +1,46 @@
+import sys
 import rclpy
 from rclpy.node import Node
-
-# Import our custom service
 from turtle_patrol_interface.srv import Patrol
 
-
-class TurtlePatrolClient(Node):
-
+class PatrolClient(Node):
     def __init__(self):
-        super().__init__('turtle1_patrol_client')
+        super().__init__('patrol_client')
+        self.client = self.create_client(Patrol, 'turtle_patrol')
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Waiting for patrol service...')
 
-
-        self._service_name = '/turtle1/patrol'
-
-        # Create a client for our Patrol service type
-        self._client = self.create_client(Patrol, self._service_name)
-
-        # Wait until the server is up (polling loop; logs once per second)
-        self.get_logger().info(f"Waiting for service {self._service_name} ...")
-        while not self._client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info(f"Service {self._service_name} not available, waiting...")
-
-        # Hard-coded request values 
-        vel = 2.0
-        omega = 1.0
-        self.get_logger().info(f"Requesting patrol: vel={vel}, omega={omega}")
-
-        # Build request
+    def send_request(self, turtle_name: str, vel: float, omega: float, x: float, y: float, theta: float):
         req = Patrol.Request()
+        req.turtle_name = turtle_name
+        req.x = x
+        req.y = y
+        req.theta = theta
         req.vel = vel
         req.omega = omega
-
-        # Send request (async under the hood)
-        self._future = self._client.call_async(req)
-
+        return self.client.call_async(req)
 
 def main(args=None):
     rclpy.init(args=args)
-    node = TurtlePatrolClient()
 
-    # Block here until the service responds (simple for teaching)
-    rclpy.spin_until_future_complete(node, node._future)
+    if len(sys.argv) != 7:
+        print("Usage: ros2 run turtle_patrol patrol_client <turtle_name> <vel> <omega> <x> <y> <theta>")
+        sys.exit(1)
+        return
+    
+    turtle_name, vel, omega, x, y, theta = sys.argv[1:7]
+    node = PatrolClient()
+    future = node.send_request(turtle_name, float(vel), float(omega), float(x), float(y), float(theta))
 
-    if node._future.done():
-        result = node._future.result()
-        if result is not None:
-            # Print the Twist returned by the server
-            cmd = result.cmd
-            node.get_logger().info(
-                f"Service response Twist: lin.x={cmd.linear.x:.2f}, ang.z={cmd.angular.z:.2f}"
-            )
-        else:
-            node.get_logger().error("Service call failed: no result returned.")
+    rclpy.spin_until_future_complete(node, future)
+    if future.result() is not None:
+        response = future.result()
+        node.get_logger().info(f'Recieved Twist: linear={response.cmd.linear.x}, angular={response.cmd.angular.z}')
     else:
-        node.get_logger().error("Service call did not complete.")
+        node.get_logger().error('Service call failed')
 
     node.destroy_node()
     rclpy.shutdown()
 
-
 if __name__ == '__main__':
     main()
-
-

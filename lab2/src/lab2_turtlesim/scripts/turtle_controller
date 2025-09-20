@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Wrapper to run the python module entry point
+exec python3 -m lab2_turtlesim.turtle_controller "$@"
