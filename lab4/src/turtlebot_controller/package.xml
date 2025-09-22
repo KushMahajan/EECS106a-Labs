@@ -4,7 +4,7 @@
   <name>turtlebot_controller</name>
   <version>0.0.0</version>
   <description>A proportional controller to make a TurtleBot follow an AR tag.</description>
-  <maintainer>rw435</maintainer>
+  <maintainer email="rw435@berkeley.edu">Renhao Wang</maintainer>
   <license>TODO: License declaration</license>
 
   <exec_depend>rclpy</exec_depend>
