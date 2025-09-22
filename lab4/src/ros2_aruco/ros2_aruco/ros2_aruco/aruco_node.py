@@ -37,14 +37,46 @@ from rclpy.qos import qos_profile_sensor_data
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
+import math
 # import tf_transformations
-from autolab_core import transformations
+# from autolab_core import transformations
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseArray, Pose, TransformStamped
 from ros2_aruco_interfaces.msg import ArucoMarkers
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from tf2_ros import TransformBroadcaster
+
+def quaternion_from_matrix(matrix):
+    """Return quaternion from rotation matrix.
+
+    >>> R = rotation_matrix(0.123, (1, 2, 3))
+    >>> q = quaternion_from_matrix(R)
+    >>> numpy.allclose(q, [0.0164262, 0.0328524, 0.0492786, 0.9981095])
+    True
+
+    """
+    q = np.empty((4,), dtype=np.float64)
+    M = np.array(matrix, dtype=np.float64, copy=False)[:4, :4]
+    t = np.trace(M)
+    if t > M[3, 3]:
+        q[3] = t
+        q[2] = M[1, 0] - M[0, 1]
+        q[1] = M[0, 2] - M[2, 0]
+        q[0] = M[2, 1] - M[1, 2]
+    else:
+        i, j, k = 0, 1, 2
+        if M[1, 1] > M[0, 0]:
+            i, j, k = 1, 2, 0
+        if M[2, 2] > M[i, i]:
+            i, j, k = 2, 0, 1
+        t = M[i, i] - (M[j, j] + M[k, k]) + M[3, 3]
+        q[i] = t
+        q[j] = M[i, j] + M[j, i]
+        q[k] = M[k, i] + M[i, k]
+        q[3] = M[k, j] - M[j, k]
+    q *= 0.5 / math.sqrt(t * M[3, 3])
+    return q
 
 
 class ArucoNode(rclpy.node.Node):
@@ -250,7 +282,8 @@ class ArucoNode(rclpy.node.Node):
                 rot_matrix[0:3, 0:3] = cv2.Rodrigues(np.array(rvecs[i][0]))[0]
 
                 # quat = tf_transformations.quaternion_from_matrix(rot_matrix)
-                quat = transformations.quaternion_from_matrix(rot_matrix)
+                # quat = transformations.quaternion_from_matrix(rot_matrix)
+                quat = quaternion_from_matrix(rot_matrix)
 
                 pose.orientation.x = quat[0]
                 pose.orientation.y = quat[1]
