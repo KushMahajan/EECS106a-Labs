@@ -36,8 +36,8 @@ def ur7e_foward_kinematics_from_angles(joint_angles):
     w0[:, 5] = [0., 1., 0] # wrist 3
 
     # Rotation matrix from base_link to wrist_3_link in zero config
-    R = np.array([[1., 0., 0.],
-                  [0., 0., -1], 
+    R = np.array([[-1., 0., 0.],
+                  [0., 0., 1.], 
                   [0., 1., 0.]])
 
     # YOUR CODE HERE (Task 1)
