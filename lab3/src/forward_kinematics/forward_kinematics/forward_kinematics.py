@@ -2,7 +2,8 @@
 
 import numpy as np
 import scipy as sp
-import kin_func_skeleton as kfs 
+import forward_kinematics.kin_func_skeleton as kfs 
+
 
 def ur7e_foward_kinematics_from_angles(joint_angles):
     """
@@ -41,6 +42,16 @@ def ur7e_foward_kinematics_from_angles(joint_angles):
                   [0., 1., 0.]])
 
     # YOUR CODE HERE (Task 1)
+    def build_twist(omega, q):
+        v = -np.cross(omega, q)
+        return np.hstack((v, omega))
+    
+    xi = np.column_stack([build_twist(w, q) for w, q in zip(w0.T, q0.T)])
+    g_st0 = np.eye(4)
+    g_st0[:3, :3] = R
+    g_st0[:3, 3] = q0[:, 5]
+    return kfs.prod_exp(xi, joint_angles) @ g_st0
+
 
 
 def ur7e_forward_kinematics_from_joint_state(joint_state):
@@ -58,7 +69,9 @@ def ur7e_forward_kinematics_from_joint_state(joint_state):
     """
     
     angles = np.zeros(6)
-    # YOUR CODE HERE (Task 2)
-    
-
-    # END YOUR CODE HERE
+    idx = [joint_state.name.index(n) for n in [
+        "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
+        "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"
+    ]]
+    joint_angles = [joint_state.position[i] for i in idx]
+    return ur7e_foward_kinematics_from_angles(joint_angles)

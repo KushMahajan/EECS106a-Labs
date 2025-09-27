@@ -103,8 +103,18 @@ def skew_3d(omega):
     Returns:
     omega_hat - (3,3) ndarray: the corresponding skew symmetric matrix
     """
+    
+    omega_hat = np.zeros((3, 3))
+    omega_hat[0, 1] = -omega[2]
+    omega_hat[0, 2] = omega[1]
+    omega_hat[1, 0] = omega[2]
+    omega_hat[1, 2] = -omega[0]
+    omega_hat[2, 0] = -omega[1]
+    omega_hat[2, 1] = omega[0]
+    
+    return omega_hat
 
-    # YOUR CODE HERE
+
 
 def rotation_3d(omega, theta):
     """
@@ -117,8 +127,22 @@ def rotation_3d(omega, theta):
     Returns:
     rot - (3,3) ndarray: the resulting rotation matrix
     """
+    
+    omega_norm = np.linalg.norm(omega)
+    if omega_norm == 0:
+        return np.eye(3)
+    
+    omega_unit = omega / omega_norm
+    omega_hat_unit = skew_3d(omega_unit)
+    I = np.eye(3)
+    sin_term = np.sin(omega_norm * theta) * omega_hat_unit
+    cos_term = (1 - np.cos(omega_norm * theta)) * np.dot(omega_hat_unit, omega_hat_unit)
+    
+    rot = I + sin_term + cos_term
+    
+    return rot
 
-    # YOUR CODE HERE
+
 
 def hat_3d(xi):
     """
@@ -130,8 +154,20 @@ def hat_3d(xi):
     Returns:
     xi_hat - (4,4) ndarray: the corresponding 4x4 matrix
     """
+    
+    v = xi[:3] 
+    omega = xi[3:]  
+    
+    omega_hat = skew_3d(omega)
+    
+    xi_hat = np.zeros((4, 4))
+    xi_hat[:3, :3] = omega_hat
+    xi_hat[:3, 3] = v
+    xi_hat[3, 3] = 0
+    
+    return xi_hat
 
-    # YOUR CODE HERE
+
 
 def homog_3d(xi, theta):
     """
@@ -144,8 +180,32 @@ def homog_3d(xi, theta):
     Returns:
     g - (4,4) ndarary: the resulting homogeneous transformation matrix
     """
+    
+    v = xi[:3]  
+    omega = xi[3:]  
+    
+    g = np.zeros((4, 4))
+    g[3, 3] = 1
+    
+    if np.allclose(omega, 0):
+        g[:3, :3] = np.eye(3)
+        g[:3, 3] = v * theta
+    else:
+        omega_norm = np.linalg.norm(omega)
+        omega_unit = omega / omega_norm
+        omega_hat_unit = skew_3d(omega_unit)
+        
+        I = np.eye(3)
+        R = I + np.sin(omega_norm * theta) * omega_hat_unit + (1 - np.cos(omega_norm * theta)) * np.dot(omega_hat_unit, omega_hat_unit)
+        g[:3, :3] = R
+        
+        omega_hat_full = skew_3d(omega)
+        term1 = np.dot(I - R, np.dot(omega_hat_full, v))
+        term2 = np.dot(np.outer(omega, omega), v) * theta
+        g[:3, 3] = (term1 + term2) / (omega_norm**2)
+    
+    return g
 
-    # YOUR CODE HERE
 
 
 def prod_exp(xi, theta):
@@ -160,8 +220,18 @@ def prod_exp(xi, theta):
     Returns:
     g - (4,4) ndarray: the resulting homogeneous transformation matrix
     """
+    
+    g = np.eye(4)
+    
+    for i in range(xi.shape[1]):
+        xi_i = xi[:, i]
+        theta_i = theta[i]
+        g_i = homog_3d(xi_i, theta_i)
+        g = np.dot(g, g_i)
+    
+    return g
 
-    # YOUR CODE HERE
+    
 
 #---------------------------------TESTING CODE---------------------------------
 #-------------------------DO NOT MODIFY ANYTHING BELOW HERE--------------------
