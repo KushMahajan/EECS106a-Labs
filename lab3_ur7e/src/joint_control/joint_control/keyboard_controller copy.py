@@ -19,8 +19,8 @@ class KeyboardController(Node):
         super().__init__('ur7e_keyboard_controller')
         
         self.joint_names = [
-            'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint',
-            'wrist_2_joint', 'wrist_3_joint', 'shoulder_pan_joint'
+            'shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
+            'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'
         ]
         self.joint_positions = [0.0]*6
         self.got_joint_states = False  # Failsafe: don't publish until joint states received
