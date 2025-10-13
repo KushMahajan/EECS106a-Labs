@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import StaticTransformBroadcaster
-from scipy.spatial.transform import Rotation as R
+
 import numpy as np
 
 class ConstantTransformPublisher(Node):

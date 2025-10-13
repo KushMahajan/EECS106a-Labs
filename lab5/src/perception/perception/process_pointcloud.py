@@ -1,7 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2
-from visualization_msgs.msg import Marker
 from geometry_msgs.msg import PointStamped
 import numpy as np
 import sensor_msgs_py.point_cloud2 as pc2
