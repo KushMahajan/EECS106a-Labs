@@ -49,14 +49,22 @@ class OccupancyGrid2d(Node):
 
          # Dimensions and bounds.
         # TODO! You'll need to set values for class variables called:
-        # -- self._x_num
-        # -- self._x_min
-        # -- self._x_max
-        # -- self._x_res # The resolution in x. Note: This isn't a ROS parameter. What will you do instead?
-        # -- self._y_num
-        # -- self._y_min
-        # -- self._y_max
-        # -- self._y_res # The resolution in y. Note: This isn't a ROS parameter. What will you do instead?
+        self.declare_parameter("x_num", 100)
+        self._x_num = self.get_parameter("x_num").value
+        self.declare_parameter("x_min", -10.0)
+        self._x_min = self.get_parameter("x_min").value
+        self.declare_parameter("x_max", 10.0)
+        self._x_max = self.get_parameter("x_max").value
+        self.declare_parameter("y_num", 100)
+        self._y_num = self.get_parameter("y_num").value
+        self.declare_parameter("y_min", -10.0)
+        self._y_min = self.get_parameter("y_min").value
+        self.declare_parameter("y_max", 10.0)
+        self._y_max = self.get_parameter("y_max").value
+
+        self._x_res = (self._x_max -  self._x_min) / self._x_num
+        self._y_res = (self._y_max -  self._y_min) / self._y_num
+        
 
         self.declare_parameter("update/occupied", 0.7)
         self._occupied_update = self.probability_to_logodds(
@@ -75,11 +83,19 @@ class OccupancyGrid2d(Node):
         # TODO! You'll need to set values for class variables called:
         # -- self._sensor_topic
         # -- self._vis_topic
+        self.declare_parameter("sensor_topic", "/scan")
+        self._sensor_topic = self.get_parameter("sensor_topic").value
+        self.declare_parameter("vis_topic", "/mapping/occupancy_grid_2d/visualization")
+        self._vis_topic = self.get_parameter("vis_topic").value
 
         # Frames.
         # TODO! You'll need to set values for class variables called:
         # -- self._sensor_frame
         # -- self._fixed_frame
+        self.declare_parameter("sensor_frame", "base_link")
+        self._sensor_frame = self.get_parameter("sensor_frame").value
+        self.declare_parameter("fixed_frame", "odom")
+        self._fixed_frame = self.get_parameter("fixed_frame").value
 
         return True
 
@@ -135,7 +151,10 @@ class OccupancyGrid2d(Node):
                 continue
             
             # Get angle of this ray in fixed frame.
-            # TODO!
+            angle = msg.angle_min + idx * msg.angle_increment + yaw
+            # Compute (x, y) coordinates of the endpoint of this ray.
+            end_x = sensor_x + r * np.cos(angle)
+            end_y = sensor_y + r * np.sin(angle)
 
             if r > msg.range_max or r < msg.range_min:
                 continue
@@ -145,6 +164,31 @@ class OccupancyGrid2d(Node):
             # Only update each voxel once. 
             # The occupancy grid is stored in self._map
             # TODO!
+            end_voxel = self.point_to_voxel(end_x, end_y)
+            if end_voxel is None:
+                continue  # skip this ray, endpoint out of bounds
+            end_ii, end_jj = end_voxel
+
+            # Use a set to avoid double updates
+            updated_voxels = set()
+
+            for d in np.arange(0.0, r, min(self._x_res, self._y_res)/2):
+                xi = sensor_x + d * np.cos(angle)
+                yi = sensor_y + d * np.sin(angle)
+                voxel = self.point_to_voxel(xi, yi)
+                if voxel is not None and voxel not in updated_voxels:
+                    ii, jj = voxel
+                    if (ii, jj) == (end_ii, end_jj):
+                        # Reached the endpoint
+                        self._map[ii, jj] += self._occupied_update
+                        if self._map[ii, jj] > self._occupied_threshold:
+                            self._map[ii, jj] = self._occupied_threshold
+                    else:
+                        self._map[ii, jj] += self._free_update
+                        if self._map[ii, jj] < self._free_threshold:
+                            self._map[ii, jj] = self._free_threshold
+                    updated_voxels.add((ii, jj))
+
         # Visualize.
         self.visualize()
 

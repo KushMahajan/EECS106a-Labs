@@ -28,7 +28,7 @@
     <param name="frames/sensor" value="$(var sensor_frame)"/>
     <param name="topics/vis" value="$(var vis_topic)"/>
     <param name="topics/sensor" value="$(var sensor_topic)"/>
-    <param name="x/num" value="$(var x_num)"/>
+    <param name="x/num"   value="$(var x_num)"/>
     <param name="x/min" value="$(var x_min)"/>
     <param name="x/max" value="$(var x_max)"/>
     <param name="y/num" value="$(var y_num)"/>
