@@ -16,9 +16,9 @@ class TablePlane(Node):
         self.marker_pub = self.create_publisher(Marker, '/ground_plane_marker', 1)
 
         # Declare parameters for plane coefficients
-        self.declare_parameter('plane.a', 1.00)
-        self.declare_parameter('plane.b', 0.0)
-        self.declare_parameter('plane.c', 1.0)
+        self.declare_parameter('plane.a', 0.0)
+        self.declare_parameter('plane.b', 1.0)
+        self.declare_parameter('plane.c', 0.001)
         self.declare_parameter('plane.d', 0.0)
 
         self.update_plane_coefficients()

@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped 
 from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
 import numpy as np
 
 class UR7e_CubeGrasp(Node):
@@ -10,6 +11,7 @@ class UR7e_CubeGrasp(Node):
         super().__init__('cube_grasp')
 
         self.cube_sub = self.create_subscription(PointStamped, '/cube_pose', self.cube_callback, 1)
+        self.cube_pub = self.create_publisher(PointStamped, '/cube_pose_base_link', 10)
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -22,6 +24,8 @@ class UR7e_CubeGrasp(Node):
         if self.cube_pose is None:
             self.cube_pose = self.transform_cube_pose(cube_pose)
             self.get_logger().info('Received cube pose')
+        else: 
+            self.cube_pub.publish(self.cube_pose)
 
     def transform_cube_pose(self, msg: PointStamped):
         """ 
@@ -35,8 +39,17 @@ class UR7e_CubeGrasp(Node):
         # ------------------------
         #TODO: Add your code here!
         # ------------------------
+        try:
+            transform = self.tf_buffer.lookup_transform('base_link', msg.header.frame_id, rclpy.time.Time())
+            transformed_point = tf2_geometry_msgs.do_transform_point(msg, transform)
+            transformed_point.header.stamp = self.get_clock().now().to_msg()
+            transformed_point.header.frame_id = 'base_link'
+            
 
-        return
+        except Exception as e:
+            self.get_logger().error(f"Could not get transform: {e}")
+            return None
+        return transformed_point
 
 def main(args=None):
     rclpy.init(args=args)

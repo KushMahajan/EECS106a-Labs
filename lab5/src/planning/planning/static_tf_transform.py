@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import StaticTransformBroadcaster
+from scipy.spatial.transform import Rotation as R
 
 import numpy as np
 
@@ -20,11 +21,25 @@ class ConstantTransformPublisher(Node):
         ])
 
         # Create TransformStamped
-        self.transform = TransformStamped()
+
         # ---------------------------
         # TODO: Fill out TransformStamped message
         # --------------------------
+        static_tf = TransformStamped()
+        static_tf.header.stamp = self.get_clock().now().to_msg()
+        static_tf.header.frame_id = 'ar_marker_9'
+        static_tf.child_frame_id = 'base_link'
 
+        Q = R.from_matrix(G[0:3, 0:3]).as_quat()
+        static_tf.transform.rotation.x = Q[0]
+        static_tf.transform.rotation.y = Q[1]
+        static_tf.transform.rotation.z = Q[2]
+        static_tf.transform.rotation.w = Q[3]
+        static_tf.transform.translation.x = G[0, 3]
+        static_tf.transform.translation.y = G[1, 3]
+        static_tf.transform.translation.z = G[2, 3]
+
+        self.transform = static_tf
 
         self.timer = self.create_timer(0.05, self.broadcast_tf)
 
