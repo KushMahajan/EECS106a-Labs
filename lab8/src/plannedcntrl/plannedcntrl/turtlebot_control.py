@@ -44,7 +44,7 @@ class TurtleBotController(Node):
                 self.get_logger().info("Waypoint reached, moving to next.")
                 return
 
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     # ------------------------------------------------------------------
     # Callback when goal point is published
