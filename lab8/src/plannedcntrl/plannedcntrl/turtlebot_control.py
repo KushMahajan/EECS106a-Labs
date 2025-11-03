@@ -35,6 +35,8 @@ class TurtleBotController(Node):
     # ------------------------------------------------------------------
     def controller(self, waypoint):
         while rclpy.ok():
+            # TODO: Transform the waypoint from the odom/world frame into the robot's base_link frame 
+            # before computing errors — you'll need this so x_err and yaw_err are in the robot's coordinate system.
 
             #TODO: Calculate x and yaw errors! 
             x_err = 0.
