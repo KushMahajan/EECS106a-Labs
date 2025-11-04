@@ -1,5 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.events import Shutdown
 from launch.actions import IncludeLaunchDescription  
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -122,6 +123,15 @@ def generate_launch_description():
         }.items(),
     )
 
+    # -------------------------
+    # Global shutdown on any process exit
+    # -------------------------
+    shutdown_on_any_exit = RegisterEventHandler(
+        OnProcessExit(
+            on_exit=[EmitEvent(event=Shutdown(reason='SOMETHING BONKED'))]
+        )
+    )
+    
     return LaunchDescription([
         ar_marker_launch_arg,
         plane_a_launch_arg,
