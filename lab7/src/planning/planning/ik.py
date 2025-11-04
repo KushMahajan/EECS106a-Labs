@@ -112,6 +112,46 @@ class IKPlanner(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = IKPlanner()
+
+    # ---------- Test setup ----------
+    current_state = JointState()
+    current_state.name = [
+        'shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
+        'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'
+    ]
+
+    # 4.722274303436279
+    # -1.8504554233946742
+    # -1.4257320165634155
+    # -1.4052301210216065
+    # 1.5935229063034058
+    # -3.14103871980776
+
+    current_state.position = [4.722, -1.850, -1.425, -1.405, 1.593, -3.141]
+
+    # ---------- Run IK ----------
+    node.get_logger().info("Testing IK computation...")
+    ik_result = node.compute_ik(current_state, 0.125, 0.611, 0.423)
+
+    # ---------- Check correctness ----------
+    if ik_result is None:
+        node.get_logger().error("IK computation returned None.")
+        sys.exit(1)
+
+    if not hasattr(ik_result, "name") or not hasattr(ik_result, "position"):
+        node.get_logger().error("IK result missing required fields (name, position).")
+        sys.exit(1)
+
+    if len(ik_result.name) != len(ik_result.position):
+        node.get_logger().error("IK joint names and positions length mismatch.")
+        sys.exit(1)
+
+    if len(ik_result.name) < 6:
+        node.get_logger().error("IK returned fewer than 6 joints — likely incorrect.")
+        sys.exit(1)
+
+    node.get_logger().info("IK check passed.")
+    
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
