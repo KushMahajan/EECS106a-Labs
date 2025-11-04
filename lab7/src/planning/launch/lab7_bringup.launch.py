@@ -2,7 +2,9 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.events import Shutdown
 from launch.actions import IncludeLaunchDescription  
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -143,5 +145,6 @@ def generate_launch_description():
         perception_node,
         planning_tf_node,
         static_base_world,
-        moveit_launch
+        moveit_launch,
+        shutdown_on_any_exit
     ])
