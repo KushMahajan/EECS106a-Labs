@@ -17,7 +17,7 @@ class TransformCubePose(Node):
             10
         )
 
-        self.cube_pose_pub = ...
+        self.cube_pose_pub = ... # Please ensure this is filled
 
         rclpy.spin_once(self, timeout_sec=2)
         self.cube_pose = None

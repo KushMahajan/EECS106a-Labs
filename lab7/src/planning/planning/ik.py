@@ -52,7 +52,9 @@ class IKPlanner(Node):
         ik_req = GetPositionIK.Request()
         # TODO: Lookup the format for ik request and build ik_req by filling in necessary parameters. What is your end-effector link name?
         ik_req.ik_request.avoid_collisions = True
-        ...
+        ik_req.ik_request.timeout = Duration(sec=2)
+        ik_req.ik_request.group_name = 'ur_manipulator'
+        
 
         future = self.ik_client.call_async(ik_req)
         rclpy.spin_until_future_complete(self, future)
@@ -110,7 +112,7 @@ class IKPlanner(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = IKPlanner()
-    rclpy.spin()
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 
