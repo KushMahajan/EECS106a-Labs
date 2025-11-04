@@ -50,7 +50,8 @@ class UR7e_CubeGrasp(Node):
         self.cube_pose = cube_pose
 
         # -----------------------------------------------------------
-        # TODO: In the following section you will add actions to the job queue. 
+        # TODO: In the following section you will add joint angles to the job queue. 
+        # Entries of the job queue should be of type either JointState or String('toggle_grip')
         # Think about you will leverage the IK planner to get joint configurations for the cube grasping task.
         # To understand how the queue works, refer to the execute_jobs() function below.
         # -----------------------------------------------------------
