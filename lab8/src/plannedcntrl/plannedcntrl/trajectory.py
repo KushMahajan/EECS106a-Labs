@@ -32,7 +32,7 @@ def bezier_curve(p0, p1, p2, p3, t):
     return (1 - t)**3 * p0 + 3*(1 - t)**2*t*p1 + 3*(1 - t)*t**2*p2 + t**3*p3
 
 
-def generate_bezier_waypoints(x1, y1, theta1, x2, y2, theta2, offset=1.0, num_points=10):
+def generate_bezier_waypoints(x1, y1, theta1, x2, y2, theta2, offset=1.0, num_points=3):
     """Generate (x, y, theta) waypoints along a smooth Bézier path."""
     d1 = np.array([np.cos(theta1), np.sin(theta1)])
     d2 = np.array([-np.cos(theta2), -np.sin(theta2)])
@@ -59,7 +59,7 @@ def plan_curved_trajectory(target_position):
     # Keep trying until transform available
     while rclpy.ok():
         try:
-            trans = bonk ## TODO: Apply a lookup transform between our world frame and turtlebot frame
+            trans = tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time()) ## TODO: Apply a lookup transform between our world frame and turtlebot frame
             break
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             node.get_logger().warn('TF lookup failed, retrying...')
@@ -73,12 +73,15 @@ def plan_curved_trajectory(target_position):
     # transforms3d expects [w, x, y, z]
     roll, pitch, yaw = euler.quat2euler([q.w, q.x, q.y, q.z])
 
+    target_x_local = target_position[0] 
+    target_y_local = target_position[1]
+
     # Compute absolute target position in odom frame
-    x2 = 0. ## TODO: How would you get x2 from our target position? Remember this is relative to x1
-    y2 = 0. ## TODO: How would you get x2 from our target position? Remember this is relative to x1
+    x2 = x1 + target_x_local * np.cos(yaw) - target_y_local * np.sin(yaw)
+    y2 = 0.13
 
     # Generate Bézier waypoints and visualize
-    waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, y2, yaw, offset=0.2, num_points=10)
+    waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, 0.05, yaw, offset=0.2, num_points=3)
     plot_trajectory(waypoints)
 
     node.destroy_node()
@@ -95,7 +98,7 @@ def main(args=None):
     plot_trajectory(waypoints)
 
     # Example: with live TF
-    # plan_curved_trajectory((0.2, 0.2))
+    plan_curved_trajectory((0.2, 0.2))
 
     rclpy.shutdown()
 

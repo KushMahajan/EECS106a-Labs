@@ -42,23 +42,25 @@ class ImageSubscriber(Node):
                 for i, mask in enumerate(masks):
 
                     # TODO: Get number of pixels in mask
-                    pixel_count = 0. 
+                    pixel_count = np.sum(mask) 
 
                     CONE_AREA = 0.0208227849
 
                     # TODO: Get depth of image 
-                    depth = 0.
+                    depth = np.sqrt((self.camera_intrinsics[0] * self.camera_intrinsics[1] * CONE_AREA)/ pixel_count)
 
                     self.get_logger().info(f'Cone {i+1}: depth={depth:.3f}m')
 
 
                     # TODO: Get u, and v of cone in image coordinates
-                    u, v = 0.
+                    u, v = np.nonzero(mask)
+                    u = float(np.mean(u))
+                    v = float(np.mean(v))
 
                     # TODO: Find X , Y , Z of cone
-                    X = 0.
-                    Y = 0.
-                    Z = 0. 
+                    X = (u - self.camera_intrinsics[0]) * depth / self.camera_intrinsics[2]
+                    Y = (u - self.camera_intrinsics[1]) * depth / self.camera_intrinsics[3]
+                    Z = depth
 
                     # Convert to turtlebot frame
                     # There's no camera frame for the turtlebots, so we just do this instead 
@@ -83,11 +85,29 @@ class ImageSubscriber(Node):
         # -------------------------------------------
         # TODO: Extract camera intrinsic parameters! 
         # -------------------------------------------
+        K = msg.k.flatten()
+        fx = K[0]
+        fy = K[4]
+        cx = K[2]
+        cy = K[5]
+        self.camera_intrinsics = (fx, fy, cx, cy)
+
         self.get_logger().info("Recieved Camera Info")
         
 
 def main(args=None):
     rclpy.init(args=args)
+
+    def camera_info_callback(self, msg):
+        # -------------------------------------------
+        # TODO: Extract camera intrinsic parameters! 
+        # -------------------------------------------
+        K = msg.k.flatten()
+        fx = K[0]
+        fy = K[4]
+        cx = K[2]
+        cy = K[5]
+
     image_subscriber = ImageSubscriber()
     rclpy.spin(image_subscriber)
     rclpy.shutdown()
