@@ -22,12 +22,12 @@ def ur7e_foward_kinematics_from_angles(joint_angles):
     w0 = np.ndarray((3, 6)) # Axis vector of each joint axis in the zero config
 
 
-    q0[:, 0] = [0., 0., 0.1625] # shoulder pan joint - shoulder_link
-    q0[:, 1] = [0., 0., 0.1625] # shoulder lift joint - upper_arm_link
-    q0[:, 2] = [0.425, 0., 0.1625] # elbow_joint - forearm_link
-    q0[:, 3] = [0.817, 0.1333, 0.1625] # wrist 1 - wrist_1_link
-    q0[:, 4] = [0.817, 0.1333, 0.06285] # wrist 2 - wrist_2_link
-    q0[:, 5] = [0.817, 0.233, 0.06285] # wrist 3 - wrist_3_link
+    q0[:, 0] = [0., 0., 0.1625] # shoulder pan joint - shoulder_link from base link
+    q0[:, 1] = [0., 0., 0.1625] # shoulder lift joint - upper_arm_link from shoulder_link
+    q0[:, 2] = [0.425, 0., 0.1625] # elbow_joint - forearm_link from shoulder_lift_joint
+    q0[:, 3] = [0.817, 0.1333, 0.1625] # wrist 1 - wrist_1_link from elbow_joint
+    q0[:, 4] = [0.817, 0.1333, 0.06285] # wrist 2 - wrist_2_link from wrist_1
+    q0[:, 5] = [0.817, 0.233, 0.06285] # wrist 3 - wrist_3_link from wrist_2
 
     w0[:, 0] = [0., 0., 1] # shoulder pan joint
     w0[:, 1] = [0, 1., 0] # shoulder lift joint
