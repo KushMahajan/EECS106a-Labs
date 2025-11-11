@@ -5,6 +5,7 @@ from moveit_msgs.msg import PositionIKRequest, Constraints, JointConstraint
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import JointState
 from builtin_interfaces.msg import Duration
+import sys
 
 
 # Example usage:
