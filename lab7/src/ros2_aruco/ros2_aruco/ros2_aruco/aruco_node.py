@@ -254,8 +254,8 @@ class ArucoNode(rclpy.node.Node):
                     goal_rvecs, goal_tvecs = cv2.aruco.estimatePoseSingleMarkers(
                         goal_corners, goal_markers, self.intrinsic_mat, self.distortion
                     )
-                self.get_logger().info(f"info is {goal_rvecs}, {goal_tvecs}")
-                self.get_logger().info(f"info is {goal_markers}")
+                # self.get_logger().info(f"info is {goal_rvecs}, {goal_tvecs}")
+                # self.get_logger().info(f"info is {goal_markers}")
                 rvecs.extend(goal_rvecs)
                 tvecs.extend(goal_tvecs)
                 final_marker_ids.extend(goal_markers)

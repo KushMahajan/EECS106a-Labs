@@ -2,14 +2,18 @@ import rclpy
 from rclpy.node import Node
 from tf2_ros import Buffer, TransformListener
 from geometry_msgs.msg import PointStamped 
+import tf2_geometry_msgs
+
 
 class TransformCubePose(Node):
     def __init__(self):
         super().__init__('transform_cube_pose')
 
+        # TF setup
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+        # Subscription
         self.cube_pose_sub = self.create_subscription(
             PointStamped,
             '/cube_pose',
@@ -17,25 +21,49 @@ class TransformCubePose(Node):
             10
         )
 
-        self.cube_pose_pub = ... # Please ensure this is filled
+        # Publisher
+        self.cube_pose_pub = self.create_publisher(
+            PointStamped,
+            '/cube_pose_base_link',
+            10
+        )
 
-        rclpy.spin_once(self, timeout_sec=2)
-        self.cube_pose = None
+        self.get_logger().info("transform_cube_pose node started.")
 
     def cube_pose_callback(self, msg: PointStamped):
-        if self.cube_pose is None:
-            self.cube_pose = self.transform_cube_pose(msg)
+        transformed = self.transform_cube_pose(msg)
+        if transformed is not None:
+            self.cube_pose_pub.publish(transformed)
+
 
     def transform_cube_pose(self, msg: PointStamped):
-        """ 
-        Transform point into base_link frame
-        Args: 
-            - msg: PointStamped - The message from /cube_pose, of the position of the cube in camera_depth_optical_frame
-        Returns:
-            Point: point in base_link_frame in form [x, y, z]
         """
+        Transform point from camera frame to base_link frame.
+        """
+        try:
+            # Make sure the timestamp is valid
+            msg.header.stamp = self.get_clock().now().to_msg()
 
-        return
+            # TF lookup
+            transform = self.tf_buffer.lookup_transform(
+                'base_link',
+                msg.header.frame_id,   # use the actual incoming frame!
+                rclpy.time.Time()
+            )
+
+            # Transform
+            transformed_point = tf2_geometry_msgs.do_transform_point(msg, transform)
+
+            # Update header
+            transformed_point.header.stamp = self.get_clock().now().to_msg()
+            transformed_point.header.frame_id = 'base_link'
+
+            return transformed_point
+
+        except Exception as e:
+            self.get_logger().error(f"Could not transform cube pose: {e}")
+            return None
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -43,6 +71,7 @@ def main(args=None):
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

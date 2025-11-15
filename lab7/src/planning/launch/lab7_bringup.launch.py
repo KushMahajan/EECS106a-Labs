@@ -42,13 +42,14 @@ def generate_launch_description():
     )
     plane_d_launch_arg = DeclareLaunchArgument(
         'plane_d',
-        default_value='-0.075'
+        default_value='-0.095'
     )
     plane_a = LaunchConfiguration('plane_a')
     plane_b = LaunchConfiguration('plane_b')
     plane_c = LaunchConfiguration('plane_c')
     plane_d = LaunchConfiguration('plane_d')
 
+    print(f"Plane parameters: a={plane_a}, b={plane_b}, c={plane_c}, d={plane_d}")
 
     # Perception node
     perception_node = Node(
@@ -77,7 +78,7 @@ def generate_launch_description():
 
     ar_marker_launch_arg = DeclareLaunchArgument(
         'ar_marker',
-        default_value='ar_marker_7'
+        default_value='ar_marker_6'
     )
     ar_marker = LaunchConfiguration('ar_marker')
 
@@ -90,6 +91,20 @@ def generate_launch_description():
         parameters=[{
             'ar_marker': ar_marker,
         }]
+    )
+
+    ik_node = Node(
+        package='planning',
+        executable='ik',
+        name='ik_node',
+        output='screen'
+    )
+
+    transform_cube_pose_node = Node(
+        package='planning',
+        executable='transform_cube_pose',
+        name='transform_cube_pose_node',
+        output='screen'
     )
 
     # Static TF: base_link -> world
@@ -144,7 +159,9 @@ def generate_launch_description():
         aruco_launch,
         perception_node,
         planning_tf_node,
+        ik_node,
         static_base_world,
         moveit_launch,
+        transform_cube_pose_node,
         shutdown_on_any_exit
     ])

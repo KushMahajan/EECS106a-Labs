@@ -18,7 +18,7 @@ class UR7e_CubeGrasp(Node):
     def __init__(self):
         super().__init__('cube_grasp')
 
-        self.cube_pub = self.create_subscription(PointStamped, '/cube_pose_in_base', self.cube_callback, 1) # TODO: CHECK IF TOPIC ALIGNS WITH YOURS
+        self.cube_pub = self.create_subscription(PointStamped, '/cube_pose_base_link', self.cube_callback, 1) # TODO: CHECK IF TOPIC ALIGNS WITH YOURS
         self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 1)
 
         self.exec_ac = ActionClient(
@@ -40,6 +40,7 @@ class UR7e_CubeGrasp(Node):
         self.joint_state = msg
 
     def cube_callback(self, cube_pose):
+        # print("Received cube pose")
         if self.cube_pose is not None:
             return
 
@@ -48,6 +49,7 @@ class UR7e_CubeGrasp(Node):
             return
 
         self.cube_pose = cube_pose
+        self.get_logger().info(f"Received cube pose at ({cube_pose.point.x:.3f}, {cube_pose.point.y:.3f}, {cube_pose.point.z:.3f})")
 
         # -----------------------------------------------------------
         # TODO: In the following section you will add joint angles to the job queue. 
@@ -63,28 +65,60 @@ class UR7e_CubeGrasp(Node):
         y offset: -0.035 (Think back to lab 5, why is this needed?)
         z offset: +0.185 (to be above the cube by accounting for gripper length)
         '''
-        ...
-        self.job_queue.append(...)
+        px = self.cube_pose.point.x + 0.0
+        py = self.cube_pose.point.y - 0.035
+        pz = self.cube_pose.point.z + 0.185
+        pre_grasp = self.ik_planner.compute_ik(
+            self.joint_state,
+            px, py, pz
+        )
+        if pre_grasp is None:
+            self.get_logger().error("Failed to compute IK for pre-grasp position")
+            return
+        self.job_queue.append(pre_grasp)
 
         # 2) Move to Grasp Position (lower the gripper to the cube)
         '''
         Note that this will again be defined relative to the cube pose. 
         DO NOT CHANGE z offset lower than +0.16. 
         '''
+        gpx = self.cube_pose.point.x + 0.0
+        gpy = self.cube_pose.point.y - 0.035
+        gpz = max(self.cube_pose.point.z + 0.16, self.cube_pose.point.z)
+        grasp = self.ik_planner.compute_ik(
+            self.joint_state,
+            gpx, gpy, gpz
+        )
+        if grasp is None:
+            self.get_logger().error("Failed to compute IK for grasp position")
+            return
+        self.job_queue.append(grasp)
 
         # 3) Close the gripper. See job_queue entries defined in init above for how to add this action.
-        ...
+        self.job_queue.append('toggle_grip')
         
         # 4) Move back to Pre-Grasp Position
+        self.job_queue.append(pre_grasp)
 
         # 5) Move to release Position
         '''
         We want the release position to be 0.4m on the other side of the aruco tag relative to initial cube pose.
         Which offset will you change to achieve this and in what direction?
         '''
+        rx = - 0.4 * np.sign(self.cube_pose.point.x)
+        ry = self.cube_pose.point.y - 0.035
+        rz = self.cube_pose.point.z + 0.185
+        release = self.ik_planner.compute_ik(
+            self.joint_state,
+            rx, ry, rz
+        )
+        if release is None:
+            self.get_logger().error("Failed to compute IK for release position")
+            return
+        self.job_queue.append(release)
 
         # 6) Release the gripper
-        ...
+        self.job_queue.append('toggle_grip')
 
         self.execute_jobs()
 
