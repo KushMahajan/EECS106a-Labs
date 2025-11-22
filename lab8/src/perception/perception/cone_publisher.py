@@ -58,8 +58,8 @@ class ImageSubscriber(Node):
                     v = float(np.mean(v))
 
                     # TODO: Find X , Y , Z of cone
-                    X = (u - self.camera_intrinsics[0]) * depth / self.camera_intrinsics[2]
-                    Y = (u - self.camera_intrinsics[1]) * depth / self.camera_intrinsics[3]
+                    X = (u - self.camera_intrinsics[2]) * depth / self.camera_intrinsics[0]
+                    Y = (v - self.camera_intrinsics[3]) * depth / self.camera_intrinsics[1]
                     Z = depth
 
                     # Convert to turtlebot frame

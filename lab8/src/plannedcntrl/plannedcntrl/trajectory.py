@@ -55,6 +55,7 @@ def plan_curved_trajectory(target_position):
     node = rclpy.create_node('turtlebot_controller')
     tf_buffer = tf2_ros.Buffer()
     tf_listener = tf2_ros.TransformListener(tf_buffer, node)
+    print("Planning curved trajectory to:", target_position) # target pos in base_link frame
 
     # Keep trying until transform available
     while rclpy.ok():
@@ -73,15 +74,17 @@ def plan_curved_trajectory(target_position):
     # transforms3d expects [w, x, y, z]
     roll, pitch, yaw = euler.quat2euler([q.w, q.x, q.y, q.z])
 
-    target_x_local = target_position[0] 
+    target_x_local = target_position[0]
     target_y_local = target_position[1]
 
     # Compute absolute target position in odom frame
-    x2 = x1 + target_x_local * np.cos(yaw) - target_y_local * np.sin(yaw)
-    y2 = 0.13
+    x2 = x1 + target_x_local*math.cos(yaw) - target_y_local*math.sin(yaw)
+    y2 = y1 + target_x_local*math.sin(yaw) + target_y_local*math.cos(yaw)
+
+    print(f"Planning trajectory from ({x1:.2f}, {y1:.2f}) to ({x2:.2f}, {y2:.2f})")
 
     # Generate Bézier waypoints and visualize
-    waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, 0.05, yaw, offset=0.2, num_points=3)
+    waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, y2, yaw, offset=0.2, num_points=10)
     plot_trajectory(waypoints)
 
     node.destroy_node()
